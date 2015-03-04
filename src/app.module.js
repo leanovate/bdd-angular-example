@@ -12,6 +12,6 @@
      * @name: bddTodo
      *
      */
-    angular.module('bddTodo', ['appCore']);
+    angular.module('bddTodo', ['appCore', 'todos']);
 
 })(angular);

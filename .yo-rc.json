@@ -18,6 +18,12 @@
         "template": "@import \"<%= filename %>\";"
       }
     },
-    "withAngularBootstrap": false
+    "withAngularBootstrap": false,
+    "modules": [
+      {
+        "name": "todos",
+        "file": "src/todos/todos.js"
+      }
+    ]
   }
 }
