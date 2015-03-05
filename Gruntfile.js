@@ -343,11 +343,15 @@ module.exports = function(grunt) {
             //find the appropriate unit test for the changed file
 
             //changed file was a test
-            var match = filepath.match(/\.spec|\.feature/);
+            var match = filepath.match(/\.spec|\.feature|\.steps\.js/);
             if(match && match[0] === '.spec') {
                 spec = filepath;
             } else if(match && match[0] === '.feature') {
                 e2e = filepath;
+            } else if(match && match[0] === '.steps.js') {
+                e2e = filepath
+                        .replace(match[0], '.feature')
+                        .replace('step_definitions/', '');
             } else if(!match) {
                 spec = filepath.replace('.js', '.spec.js');
                 e2e = filepath.split('.').slice(0, -2) + '.feature';

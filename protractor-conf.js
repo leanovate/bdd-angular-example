@@ -18,7 +18,7 @@ exports.config = {
 
     framework: 'cucumber',
     cucumberOpts: {
-        require: ['features/**/*.js'],
+        require: ['features/**/*.js', '**/*.steps.js'],
         format: 'pretty'
     }
 
