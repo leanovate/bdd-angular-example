@@ -4,21 +4,10 @@ describe('TodosCtrl', function() {
 
     var $scope, todoListServiceMock;
 
-    todoListServiceMock = function() {
-        var todos = [];
-        return {
-            get: function() {
-                return todos;
-            },
-            add: function(todo) {
-                todos.push(todo);
-            }
-        };
-    };
-
-    beforeEach(inject(function(_$rootScope_, _$controller_) {
+    beforeEach(inject(function(_$rootScope_, _$controller_, _$q_, _$templateCache_) {
         $scope = _$rootScope_.$new();
         var tdInstance = false;
+        _$templateCache_.put('appCore/404.html', '404');
 
         // create helper function to init controller
         this.td = function() {
@@ -33,29 +22,45 @@ describe('TodosCtrl', function() {
             name: 'mock todo',
             done: false
         };
+
+        todoListServiceMock = (function() {
+            var todos = [];
+            return {
+                get: function() {
+                    var deferred = _$q_.defer();
+                    deferred.resolve(todos);
+                    return deferred.promise;
+                },
+                add: function(todo) {
+                    var deferred = _$q_.defer();
+                    todos.push(todo);
+                    deferred.resolve(todos);
+                    return deferred.promise;
+                }
+            };
+        })();
+
+        spyOn(todoListServiceMock, 'get').and.callThrough();
+        spyOn(todoListServiceMock, 'add').and.callThrough();
+
     }));
 
     it('should have an empty to do list on init', function() {
-        // create spy for the mock service to return empty list
-        spyOn(todoListServiceMock, 'get').and.returnValue([]);
-
         expect(this.td().todoList).toBeDefined();
         expect(this.td().todoList).toEqual([]);
         expect(todoListServiceMock.get).toHaveBeenCalled();
     });
 
     it('should have an addTodo function', function() {
-        expect(this.td().addTodo).toBeAFunction();
+        expect(typeof this.td().addTodo).toBe('function');
     });
 
     it('should call TodoListService when addTodo was called', function() {
-        spyOn(todoListServiceMock, 'get').and.callThrough();
-        spyOn(todoListServiceMock, 'add').and.callThrough();
-
         this.td().addTodo(this.mockTodo);
+        $scope.$apply();
         expect(todoListServiceMock.add).toHaveBeenCalledWith(this.mockTodo);
         // one call for init, one for updating
-        expect(todoListServiceMock.get.calls.count()).toEqual(2);
+        expect(todoListServiceMock.get.calls.count()).toEqual(1);
         expect(this.td().todoList).toEqual([this.mockTodo]);
     });
 });
