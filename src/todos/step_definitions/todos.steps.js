@@ -14,13 +14,13 @@ var todoStepWrapper = function() {
     });
 
     this.When(/^I add a to do called "([^"]*)"$/, function(arg1, callback) {
-        element(by.css('#add-todo'))
+        element(by.css('#new-todo'))
             .sendKeys('args1', protractor.Key.ENTER);
         callback();
     });
 
     this.When(/^I hit enter on the empty to do input field$/, function(callback) {
-        element(by.css('#add-todo'))
+        element(by.css('#new-todo'))
             .sendKeys(protractor.Key.ENTER);
 
         callback();
