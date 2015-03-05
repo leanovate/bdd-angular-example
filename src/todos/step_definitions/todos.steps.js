@@ -5,7 +5,8 @@ var todoStepWrapper = function() {
     var expect = chai.expect;
 
     this.Then(/^the to do list should contain (\d+) elemen(t|ts)$/, function(arg1, arg2, callback) {
-        var todoList = element.all(by.repeater('todo in td.todoList'));
+        expect(element(by.css('#todo-list'))).to.eventually.be.an.instanceof(element);
+        var todoList = element.all(by.css('#todo-list li'));
         expect(todoList.count())
             .to.eventually.equal(parseInt(arg1, 10))
             .and.notify(callback);
