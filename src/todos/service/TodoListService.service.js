@@ -51,7 +51,9 @@
         this.add = function(todo) {
             var deferred = $q.defer();
 
-            todos.push(todo);
+            if(todo && todo.name) {
+                todos.push(todo);
+            }
 
             _saveToLocalStorage(todos);
             deferred.resolve(todos);

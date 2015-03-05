@@ -104,7 +104,7 @@ module.exports = function(grunt) {
                     spawn: true
                 }
 
-        },
+            },
             css: {
                 files: ['temp/app.css']
             }
@@ -137,7 +137,7 @@ module.exports = function(grunt) {
                 options: {},
                 files: {
                     "temp/app.css": "src/app.module.less" // destination file and source file
-            }
+                }
             }
         },
         ngtemplates: {
@@ -320,67 +320,73 @@ module.exports = function(grunt) {
         'jshint', 'clean:before', 'less', 'dom_munger', 'ngtemplates', 'cssmin', 'concat', 'ngAnnotate', 'uglify',
         'copy', 'htmlmin', 'clean:after'
     ]);
-    grunt.registerTask('serve', ['dom_munger:read', 'jshint', 'karma:during_watch', 'connect', 'less:development', 'watch']);
+    grunt.registerTask('serve',
+        ['dom_munger:read', 'jshint', 'karma:during_watch', 'connect', 'less:development', 'watch']);
     grunt.registerTask('test', ['dom_munger:read', 'karma:all_tests', 'e2e-test']);
 
     grunt.registerTask('e2e-test', ['connect:test', 'protractor:e2e']);
 
     grunt.event.on('watch', function(action, filepath) {
-        //https://github.com/gruntjs/grunt-contrib-watch/issues/156
+            //https://github.com/gruntjs/grunt-contrib-watch/issues/156
 
-        var tasksToRun = [];
+            var tasksToRun = [];
+            var match = filepath.match(/\.spec|\.feature|\.steps\.js|\.html/);
+            if(match) {
 
-        if(filepath.match(/\.js|\.spec|\.feature/)) {
+                //lint the changed js file
+                if(filepath.match(/\.js/)) {
+                    grunt.config('jshint.main.src', filepath);
+                    tasksToRun.push('jshint');
+                }
 
-            //lint the changed js file
-            if(filepath.match(/\.js/)) {
-                grunt.config('jshint.main.src', filepath);
-                tasksToRun.push('jshint');
-            }
+                var spec = false;
+                var e2e = false;
+                //find the appropriate unit test for the changed file
 
-            var spec = false;
-            var e2e = false;
-            //find the appropriate unit test for the changed file
+                //changed file was a test
 
-            //changed file was a test
-            var match = filepath.match(/\.spec|\.feature|\.steps\.js/);
-            if(match && match[0] === '.spec') {
-                spec = filepath;
-            } else if(match && match[0] === '.feature') {
-                e2e = filepath;
-            } else if(match && match[0] === '.steps.js') {
-                e2e = filepath
+                if(match && match[0] === '.spec') {
+                    spec = filepath;
+                } else if(match && match[0] === '.feature') {
+                    e2e = filepath;
+                } else if(match && match[0] === '.steps.js') {
+                    e2e = filepath
                         .replace(match[0], '.feature')
                         .replace('step_definitions/', '');
-            } else if(!match) {
-                spec = filepath.replace('.js', '.spec.js');
-                e2e = filepath.split('.').slice(0, -2) + '.feature';
+                } else if(match && match[0] === '.html') {
+                    e2e = filepath.replace(match[0], '.feature');
+                } else if(!match) {
+                    spec = filepath.replace('.js', '.spec.js');
+                    e2e = filepath.split('.').slice(0, -2) + '.feature';
+                }
+
+                //if the spec exists then lets run it
+                if(spec && grunt.file.exists(spec)) {
+                    var files = [].concat(grunt.config('dom_munger.data.appjs'));
+                    files.push('bower_components/angular-mocks/angular-mocks.js');
+                    files.push(spec);
+                    grunt.config('karma.options.files', files);
+                    tasksToRun.push('karma:during_watch');
+                }
+
+                if(e2e && grunt.file.exists(e2e)) {
+                    var e2eFiles = [];
+                    e2eFiles.push(e2e);
+                    grunt.config('protractor.continuous.options.args.specs', e2eFiles);
+                    tasksToRun.push('protractor:continuous');
+                }
             }
 
-            //if the spec exists then lets run it
-            if(spec && grunt.file.exists(spec)) {
-                var files = [].concat(grunt.config('dom_munger.data.appjs'));
-                files.push('bower_components/angular-mocks/angular-mocks.js');
-                files.push(spec);
-                grunt.config('karma.options.files', files);
-                tasksToRun.push('karma:during_watch');
+            //if index.html changed, we need to reread the <script> tags so our next run of karma
+            //will have the correct environment
+            if(filepath === 'src/index.html') {
+                tasksToRun.push('dom_munger:read');
             }
 
-            if(e2e && grunt.file.exists(e2e)) {
-                var e2eFiles = [];
-                e2eFiles.push(e2e);
-                grunt.config('protractor.continuous.options.args.specs', e2eFiles);
-                tasksToRun.push('protractor:continuous');
-            }
+            grunt.config('watch.main.tasks', tasksToRun);
+
         }
-
-        //if index.html changed, we need to reread the <script> tags so our next run of karma
-        //will have the correct environment
-        if(filepath === 'src/index.html') {
-            tasksToRun.push('dom_munger:read');
-        }
-
-        grunt.config('watch.main.tasks', tasksToRun);
-
-    });
-};
+    )
+    ;
+}
+;
